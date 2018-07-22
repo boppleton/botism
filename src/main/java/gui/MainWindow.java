@@ -2,14 +2,28 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class MainWindow extends JFrame {
 
     private static GridBagConstraints gbc = new GridBagConstraints();
-
-
     private static JPanel tradeprofitstopPanel = new JPanel(new GridBagLayout());
 
+    private static JTextField amtField;
+    private static JTextField priceField;
+
+    private static JButton buy;
+    private static JButton sell;
+
+    private static JRadioButton forcemakerRadio;
+    private static boolean forcemakerBool = true;
+
+    private static JRadioButton limitCheckbox;
+    private static boolean limitBool = false;
+
+    private static JRadioButton marketCheckbox;
+    private static boolean marketBool = false;
 
     public MainWindow(String title) {
         super(title);
@@ -17,6 +31,78 @@ public class MainWindow extends JFrame {
 
         setupTradeProfitStopPanels();
         openOrdersPanel();
+
+        setupBuySellButtons();
+
+        setupTradeStuff();
+
+        setupTradeRadios();
+
+    }
+
+    private void setupTradeRadios() {
+
+        forcemakerRadio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                forcemakerBool = true;
+                limitBool = false;
+                marketBool = false;
+                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+            }
+        });
+
+        limitCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                forcemakerBool = false;
+                limitBool = true;
+                marketBool = false;
+                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+            }
+        });
+
+        marketCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                forcemakerBool = false;
+                limitBool = false;
+                marketBool = true;
+                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+            }
+        });
+    }
+
+    private void setupTradeStuff() {
+
+        //start with forcemaker radio on
+        forcemakerRadio.setSelected(true);
+
+        //start with pricefield disabled
+        priceField.setEnabled(false);
+
+    }
+
+    private void setupBuySellButtons() {
+
+        buy.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("buy " + amtField.getText());
+            }
+        });
+
+        sell.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("sell " + amtField.getText());
+            }
+        });
+
+
     }
 
     private void setupTradeProfitStopPanels() {
@@ -41,7 +127,7 @@ public class MainWindow extends JFrame {
         JLabel amountLabel = new JLabel("amount");
         amountPanel.add(amountLabel);
 
-        JTextField amtField = new JTextField(7);
+        amtField = new JTextField(7);
         amountPanel.add(amtField);
 
         //price: [ ]
@@ -50,7 +136,7 @@ public class MainWindow extends JFrame {
         JLabel priceLabel = new JLabel("price");
         pricePanel.add(priceLabel);
 
-        JTextField priceField = new JTextField(7);
+        priceField = new JTextField(7);
         pricePanel.add(priceField);
 
         //panel for amount and price
@@ -66,19 +152,19 @@ public class MainWindow extends JFrame {
         // [Buy] [Sell]
         JPanel buysellButtonsPanel = new JPanel();
 
-        JButton buy = new JButton("Buy");
+        buy = new JButton("Buy");
         buysellButtonsPanel.add(buy);
 
-        JButton sell = new JButton("Sell");
+        sell = new JButton("Sell");
         buysellButtonsPanel.add(sell);
 
         gbc(0,1,1,1, GridBagConstraints.CENTER);
         tradePanel.add(buysellButtonsPanel, gbc);
 
         // * ordertype radios
-        JRadioButton forcemakerRadio = new JRadioButton("force maker");
-        JRadioButton limitCheckbox = new JRadioButton("limit");
-        JRadioButton marketCheckbox = new JRadioButton("market");
+        forcemakerRadio = new JRadioButton("force maker");
+        limitCheckbox = new JRadioButton("limit");
+        marketCheckbox = new JRadioButton("market");
 
         ButtonGroup radios1 = new ButtonGroup();
         radios1.add(forcemakerRadio);

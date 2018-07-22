@@ -26,7 +26,7 @@ public class Main {
 
             if (launchWindow != null) {
                 launchWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                launchWindow.setSize(400, 300);
+                launchWindow.setSize(600, 400);
                 launchWindow.setLocationRelativeTo(null);
                 launchWindow.setVisible(true);
             }

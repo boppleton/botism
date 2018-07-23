@@ -88,9 +88,6 @@ public class MainWindow extends JFrame {
         //start with forcemaker radio on
         forcemakerRadio.setSelected(true);
 
-        //start with pricefield disabled
-        priceField.setEnabled(false);
-
     }
 
     private void setupBuySellButtons() {

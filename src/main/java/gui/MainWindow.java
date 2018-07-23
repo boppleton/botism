@@ -12,6 +12,7 @@ public class MainWindow extends JFrame {
 
     private static JTextField amtField;
     private static JTextField priceField;
+    private static JPanel pricePanel;
 
     private static JButton buy;
     private static JButton sell;
@@ -49,7 +50,8 @@ public class MainWindow extends JFrame {
                 forcemakerBool = true;
                 limitBool = false;
                 marketBool = false;
-                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+
+                pricePanel.setVisible(false);
             }
         });
 
@@ -60,7 +62,8 @@ public class MainWindow extends JFrame {
                 forcemakerBool = false;
                 limitBool = true;
                 marketBool = false;
-                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+
+                pricePanel.setVisible(true);
             }
         });
 
@@ -71,12 +74,16 @@ public class MainWindow extends JFrame {
                 forcemakerBool = false;
                 limitBool = false;
                 marketBool = true;
-                System.out.println(" " + forcemakerBool + limitBool + marketBool);
+
+                pricePanel.setVisible(false);
             }
         });
     }
 
     private void setupTradeStuff() {
+
+        //price field hidden on start
+        pricePanel.setVisible(false);
 
         //start with forcemaker radio on
         forcemakerRadio.setSelected(true);
@@ -91,14 +98,14 @@ public class MainWindow extends JFrame {
         buy.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("buy " + amtField.getText());
+                System.out.println(  (forcemakerBool?"forcemaker":"") + (limitBool?"limit":"") + (marketBool?"market":"") + " buy " + amtField.getText());
             }
         });
 
         sell.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("sell " + amtField.getText());
+                System.out.println(  (forcemakerBool?"forcemaker":"") + (limitBool?"limit":"") + (marketBool?"market":"") + " sell " + amtField.getText());
             }
         });
 
@@ -131,7 +138,7 @@ public class MainWindow extends JFrame {
         amountPanel.add(amtField);
 
         //price: [ ]
-        JPanel pricePanel = new JPanel();
+        pricePanel = new JPanel();
 
         JLabel priceLabel = new JLabel("price");
         pricePanel.add(priceLabel);

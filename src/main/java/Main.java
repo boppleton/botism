@@ -1,5 +1,7 @@
 import gui.MainWindow;
 import org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel;
+import org.pushingpixels.substance.api.skin.SubstanceDustLookAndFeel;
+import org.pushingpixels.substance.api.skin.SubstanceGraphiteAquaLookAndFeel;
 
 import javax.swing.*;
 
@@ -17,7 +19,7 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(new SubstanceBusinessBlueSteelLookAndFeel());
+                UIManager.setLookAndFeel(new SubstanceGraphiteAquaLookAndFeel());
             } catch (Exception e) { System.out.println("Substance look&feel load error!"); e.printStackTrace(); }
 
             try {

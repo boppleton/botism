@@ -13,4 +13,12 @@ public class Formatter {
 
     }
 
+    public static int getNumber(String text) {
+
+        text = text.replaceAll("\\D", "");
+
+        return Integer.parseInt(text);
+
+    }
+
 }

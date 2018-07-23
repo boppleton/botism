@@ -98,11 +98,15 @@ public class BitmexClient extends Client {
 //
 //    }
 
-//    @Override
-//    public void onMessage(String message) {
-//
-////        System.out.println(message);
-//
+    @Override
+    public void onMessage(String message) {
+
+//        System.out.println(message);
+
+        if (message.contains("{\"table\":\"order\"")) {
+            onMessageOrder(message);
+        }
+
 //        if (message.contains("{\"table\":\"position\"")) {
 //            try {
 //                onMessagePosition(message);
@@ -112,29 +116,50 @@ public class BitmexClient extends Client {
 //                e.printStackTrace();
 //            }
 //        }
-//
-////        if (message.contains())
-//
+
+//        if (message.contains())
+
 //        if (message.contains("\"table\":\"quote\"")) {
 //            onMessageQuote(message);
 //        }
-////        } else if (message.contains("orderBookL2")) {
-////            try {
-////                onMessageOrderBook(message);
-////            } catch (IOException e) {
-////                e.printStackTrace();
-////            }
-////        } else if (message.contains("liquidation")) {
-////            try {
-////                onMessageLiq(message);
-////            } catch (IOException e) {
-////                e.printStackTrace();
-////            }
-//////        } else {
-//////            onMessageOther(message);
-////        }
+//        } else if (message.contains("orderBookL2")) {
+//            try {
+//                onMessageOrderBook(message);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        } else if (message.contains("liquidation")) {
+//            try {
+//                onMessageLiq(message);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+////        } else {
+////            onMessageOther(message);
+//        }
+
+    }
+
+    private void onMessageOrder(String message) {
+
+
+
+//        String action = StringUtils.substringBetween(message, "\"action\":\"", "\",");
+//        int currentAmt; try { currentAmt = Integer.parseInt(StringUtils.substringBetween(message, "\"leavesQty\":", ",")); }catch (Exception e) { currentAmt = -1; }
+//        String side = StringUtils.substringBetween(message, "\"side\":\"", "\",");
+//        String status = StringUtils.substringBetween(message, "\"ordStatus\":\"", "\",");
 //
-//    }
+//        String id = StringUtils.substringBetween(message, "\"orderID\":\"", "\",");
+//
+//
+//        String price = StringUtils.substringBetween(message, "\"price\":\"", "\",");
+
+
+//        Broadcaster.broadcast("%" + "bitmexOrder" + "%<" + action + ">!" + side + "!#" + currentAmt + "#@" + status + "@*" + price + "*~" + id + "~=");
+
+        Broadcaster.broadcast(message);
+
+    }
 
 //    private void onMessageQuote(String message) {
 //

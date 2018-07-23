@@ -157,7 +157,7 @@ public class BitmexRestMethods {
 
         try {
 
-//            marketOrder = tradeRaw.placeMarketOrder("XBTUSD", new BigDecimal(amt), null);
+            marketOrder = tradeRaw.placeMarketOrder("XBTUSD", amt>0?BitmexSide.BUY:BitmexSide.SELL, new BigDecimal(amt), null);
 
         } catch (Exception e) {
 //            e.printStackTrace();

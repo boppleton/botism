@@ -21,7 +21,10 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
     private JScrollPane ordersScrollPane;
     private JTable ordersTable;
-    private static ArrayList<Order> orders = new ArrayList<>();
+
+    /// doin this
+    private static ArrayList<Order> XBTUSDorders = new ArrayList<>();
+    private static ArrayList<Order> XBTU18orders = new ArrayList<>();
 
     private static GridBagConstraints gbc = new GridBagConstraints();
 
@@ -48,9 +51,11 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         setLayout(new GridBagLayout());
         Broadcaster.register(this);
 
-        orders.add(new Order("update", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
-        orders.add(new Order("update", "Buy", 10000, "New", "7100.5", "678dshj-dgssdjf-sdfg39a-sgf64h"));
-        orders.add(new Order("update", "Buy", 20000, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
+        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
+        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7100.5", "678dshj-dgssdjf-sdfg39a-sgf64h"));
+        XBTUSDorders.add(new Order("update", "Buy", 20000, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
+
+        XBTU18orders.add(new Order("update", "Buy", 500, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
 
 
         tabs = new JTabbedPane();
@@ -61,20 +66,8 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         gbc.fill = GridBagConstraints.NONE;
 
         newInstrumentTab("XBT/USD", new JPanel(new GridBagLayout()), new JTextField(), new JTextField(), new JPanel(false),  XBTUSDforcemakerBool, XBTUSDlimitBool, XBTUSDmarketBool);
-//
-//        JPanel xbtu18Panel = new JPanel(new GridBagLayout());
-//
 
         newInstrumentTab("XBT/U18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
-        newInstrumentTab("XBT/Z18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
-        newInstrumentTab("ETH/U18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
-        newInstrumentTab("BCH/U18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
-        newInstrumentTab("XRP/U18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
 
 
 
@@ -87,7 +80,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
         setupTradeProfitStopPanels(instrument, panel, amtField, priceField, pricePanel, forcemakerBool, limitBool, marketBool);
 
-        openOrdersPanel(panel);
+        openOrdersPanel(instrument, panel);
 
 
 
@@ -101,33 +94,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         JPanel tradeprofitstopPanel = new JPanel(new GridBagLayout());
 
         JButton buy = new JButton("buy");
-
-        buy.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println((forcemakerBool ? "forcemaker" : "") + (limitBool ? "limit" : "") + (marketBool ? "market" : "") + " buy " + amtField.getText());
-
-                if (forcemakerBool) {
-
-                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
-
-                } else if (limitBool) {
-//                    try { BitmexRestMethods.limit((double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
-
-                } else if (marketBool) {
-                    System.out.println("market");
-//                    try { BitmexRestMethods.market((double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "market buy " + amtField.getText());
-
-                }
-
-            }
-        });
 
         JButton sell = new JButton("sell");
 
@@ -150,45 +116,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 
     }
-
-//    private void setupBuySellButtons(String instrument, JButton buy, JButton sell, JTextField amtField, JTextField priceField, JPanel pricePanel, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
-//
-//
-//
-//
-//
-//    }
-
-
-    private void openOrdersPanel(JPanel panel) {
-
-        ordersTable = new JTable(new OpenOrdersTableModel(orders));
-        ordersTable.setDefaultRenderer(Order.class, new OpenOrdersCell());
-        ordersTable.setTableHeader(null);
-
-
-        ordersScrollPane = new JScrollPane(ordersTable);
-        ordersScrollPane.setBorder(BorderFactory.createTitledBorder("open orders"));
-
-        ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-
-        ordersScrollPane.addMouseWheelListener(e -> {
-            if (ordersScrollPane.getVerticalScrollBar().getValue() == 0) {
-                ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-            } else {
-                ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-            }
-        });
-
-
-        gbc(0,1,1,1,GridBagConstraints.NORTHWEST);
-        gbc.fill = GridBagConstraints.BOTH;
-        panel.add(ordersScrollPane, gbc);
-        gbc.fill = GridBagConstraints.NONE;
-
-
-    }
-
 
     private void tradePanel(String instrument, JPanel tradeprofitstopPanel, JTextField amtField,  JTextField priceField, JPanel pricePanel,  JButton buy, JButton sell, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
 
@@ -253,10 +180,13 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         tradePanel.add(marketCheckbox, gbc);
 
         if (instrument.contains("XBT/USD")) {
-            setupXBTUSDTradeRadiosAndButtons("XBT/USD", buy, sell, amtField, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool, priceField, pricePanel);
+            XBTUSDbuttons(instrument, buy, sell, amtField, priceField);
+            setupXBTUSDTradeRadios("XBT/USD", buy, sell, amtField, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool, priceField, pricePanel);
         } else if (instrument.contains("XBT/U18")) {
-            setupXBTU18TradeRadiosAndButtons("XBT/U18", buy, sell, amtField, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool, priceField, pricePanel);
+            XBTU18buttons(instrument, buy, sell, amtField, priceField);
+            setupXBTU18TradeRadios("XBT/U18", buy, sell, amtField, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool, priceField, pricePanel);
         }
+
 
 
         //add tradepanel to main panelgroup
@@ -264,6 +194,121 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         tradeprofitstopPanel.add(tradePanel, gbc);
 
     }
+
+    private void XBTU18buttons(String instrument, JButton buy, JButton sell, JTextField amtField, JTextField priceField) {
+
+        buy.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+//                System.out.println(instrument +( XBTUSDforcemakerBool ? "forcemaker" : "") + (XBTUSDlimitBool ? "limit" : "") + (XBTUSDmarketBool ? "market" : "") + " buy " + amtField.getText());
+
+                if (XBTU18forcemakerBool) {
+
+                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
+
+                } else if (XBTU18limitBool) {
+//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
+
+                } else if (XBTU18marketBool) {
+                    System.out.println("market");
+//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "market buy " + amtField.getText());
+
+                }
+
+            }
+        });
+
+        sell.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (XBTU18forcemakerBool) {
+
+                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
+
+                } else if (XBTU18limitBool) {
+//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
+
+                } else if (XBTU18marketBool) {
+//                    System.out.println("market");
+//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "market sell " + amtField.getText());
+
+                }
+
+            }
+        });
+
+    }
+
+    private void XBTUSDbuttons(String instrument, JButton buy, JButton sell, JTextField amtField, JTextField priceField) {
+
+        buy.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+//                System.out.println(instrument +( XBTUSDforcemakerBool ? "forcemaker" : "") + (XBTUSDlimitBool ? "limit" : "") + (XBTUSDmarketBool ? "market" : "") + " buy " + amtField.getText());
+
+                if (XBTUSDforcemakerBool) {
+
+                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
+
+                } else if (XBTUSDlimitBool) {
+//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
+
+                } else if (XBTUSDmarketBool) {
+                    System.out.println("market");
+//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "market buy " + amtField.getText());
+
+                }
+
+            }
+        });
+
+        sell.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (XBTUSDforcemakerBool) {
+
+                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
+
+                } else if (XBTUSDlimitBool) {
+//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
+
+                } else if (XBTUSDmarketBool) {
+//                    System.out.println("market");
+//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
+//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+
+                    System.out.println(instrument + "market sell " + amtField.getText());
+
+                }
+
+            }
+        });
+
+    }
+
     private void takeProfitPanel(JPanel tradeprofitstopPanel) {
 
         JPanel takeprofitPanel = new JPanel(new GridBagLayout());
@@ -295,73 +340,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
     }
 
-
-
-    private void setupXBTUSDTradeRadiosAndButtons(String instrument, JButton buy, JButton sell, JTextField amtField, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool, JTextField priceField, JPanel pricePanel) {
-
-        buy.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(instrument +( XBTUSDforcemakerBool ? "forcemaker" : "") + (XBTUSDlimitBool ? "limit" : "") + (XBTUSDmarketBool ? "market" : "") + " buy " + amtField.getText());
-
-//                if (forcemakerBool) {
-//
-//                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
-//
-//                } else if (limitBool) {
-////                    try { BitmexRestMethods.limit((double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-////                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//
-//                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
-//
-//                } else if (marketBool) {
-//                    System.out.println("market");
-////                    try { BitmexRestMethods.market((double) Formatter.getNumber(amtField.getText()), true);
-////                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//
-//                    System.out.println(instrument + "market buy " + amtField.getText());
-//
-//                }
-
-            }
-        });
-
-        sell.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                if (forcemakerBool) {
-
-                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
-
-                } else if (limitBool) {
-//                    try { BitmexRestMethods.limit((double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
-
-                } else if (marketBool) {
-                    System.out.println("market");
-//                    try { BitmexRestMethods.market((double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "market sell " + amtField.getText());
-
-                }
-
-//                if (forcemakerBool) {
-//
-//                } else if (limitBool) {
-//                    try { BitmexRestMethods.limit((double) -Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//                } else if (marketBool) {
-//                    System.out.println("market");
-//                    try { BitmexRestMethods.market((double) -Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//                }
-            }
-        });
-
+    private void setupXBTUSDTradeRadios(String instrument, JButton buy, JButton sell, JTextField amtField, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool, JTextField priceField, JPanel pricePanel) {
 
         forcemakerRadio.addActionListener(new ActionListener() {
             @Override
@@ -400,71 +379,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             }
         });
     }
-
-    private void setupXBTU18TradeRadiosAndButtons(String instrument, JButton buy, JButton sell, JTextField amtField, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool, JTextField priceField, JPanel pricePanel) {
-
-        buy.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(instrument + (XBTU18forcemakerBool ? "forcemaker" : "") + (XBTU18limitBool ? "limit" : "") + (XBTU18marketBool ? "market" : "") + " buy " + amtField.getText());
-
-//                if (forcemakerBool) {
-//
-//                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
-//
-//                } else if (limitBool) {
-////                    try { BitmexRestMethods.limit((double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-////                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//
-//                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
-//
-//                } else if (marketBool) {
-//                    System.out.println("market");
-////                    try { BitmexRestMethods.market((double) Formatter.getNumber(amtField.getText()), true);
-////                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//
-//                    System.out.println(instrument + "market buy " + amtField.getText());
-//
-//                }
-
-            }
-        });
-
-        sell.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                if (forcemakerBool) {
-
-                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
-
-                } else if (limitBool) {
-//                    try { BitmexRestMethods.limit((double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
-
-                } else if (marketBool) {
-                    System.out.println("market");
-//                    try { BitmexRestMethods.market((double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-
-                    System.out.println(instrument + "market sell " + amtField.getText());
-
-                }
-
-//                if (forcemakerBool) {
-//
-//                } else if (limitBool) {
-//                    try { BitmexRestMethods.limit((double) -Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//                } else if (marketBool) {
-//                    System.out.println("market");
-//                    try { BitmexRestMethods.market((double) -Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
-//                }
-            }
-        });
+    private void setupXBTU18TradeRadios(String instrument, JButton buy, JButton sell, JTextField amtField, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool, JTextField priceField, JPanel pricePanel) {
 
 
         forcemakerRadio.addActionListener(new ActionListener() {
@@ -503,6 +418,42 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
                 pricePanel.setVisible(false);
             }
         });
+    }
+
+
+    private void openOrdersPanel(String instrument, JPanel panel) {
+
+        if (instrument.contains("XBT/USD")) {
+            ordersTable = new JTable(new OpenOrdersTableModel(XBTUSDorders));
+        } else if (instrument.contains("XBT/U18")) {
+            ordersTable = new JTable(new OpenOrdersTableModel(XBTU18orders));
+        }
+
+
+        ordersTable.setDefaultRenderer(Order.class, new OpenOrdersCell());
+        ordersTable.setTableHeader(null);
+
+
+        ordersScrollPane = new JScrollPane(ordersTable);
+        ordersScrollPane.setBorder(BorderFactory.createTitledBorder("open orders"));
+
+        ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+
+        ordersScrollPane.addMouseWheelListener(e -> {
+            if (ordersScrollPane.getVerticalScrollBar().getValue() == 0) {
+                ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+            } else {
+                ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+            }
+        });
+
+
+        gbc(0,1,1,1,GridBagConstraints.NORTHWEST);
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(ordersScrollPane, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+
+
     }
 
 
@@ -553,7 +504,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             String price = StringUtils.substringBetween(message, "\"price\":\"", "\",");
 
             boolean existingOrder = false;
-            for (Order o : orders) {
+            for (Order o : XBTUSDorders) {
                 if (o.getId().contains(id)) {
                     System.out.println("order already in list, updating");
                     if (status != null) {
@@ -565,7 +516,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
             if (!existingOrder && !id.contains("guid")) {
                 System.out.println("order not in list, adding");
-                orders.add(new Order(action, side, currentAmt, status, price, id));
+                XBTUSDorders.add(new Order(action, side, currentAmt, status, price, id));
             }
 
             SwingUtilities.invokeLater(() -> {

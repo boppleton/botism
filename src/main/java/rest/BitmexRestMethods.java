@@ -34,13 +34,13 @@ public class BitmexRestMethods {
 
     }
 
-    public static BitmexPrivateOrder updateClose(int positionsize, double entry, double profitPercent, boolean force) throws InterruptedException {
+    public static BitmexPrivateOrder updateClose(String instrument, int positionsize, double entry, double profitPercent, boolean force) throws InterruptedException {
 
         double closePrice = positionsize > 0 ? (entry * (1+profitPercent*.01)) : (entry * (1-profitPercent*.01));
 
         System.out.println("setting close for position:" + positionsize + " entry:" + entry + "closeprice:" + closePrice);
 
-        BitmexPrivateOrder order = limit(-positionsize, positionsize > 0 ? Math.ceil(closePrice) : Math.floor(closePrice), force);
+        BitmexPrivateOrder order = limit(instrument, -positionsize, positionsize > 0 ? Math.ceil(closePrice) : Math.floor(closePrice), force);
 
 
         return order;
@@ -119,14 +119,14 @@ public class BitmexRestMethods {
 
     }
 
-    public static BitmexPrivateOrder limit(double amt, double price, boolean force) throws InterruptedException {
+    public static BitmexPrivateOrder limit(String instrument, double amt, double price, boolean force) throws InterruptedException {
 
 
         BitmexPrivateOrder limitOrder = null;
 
         try {
 
-            limitOrder = tradeRaw.placeLimitOrder("XBTUSD", new BigDecimal(amt), new BigDecimal(Formatter.getRoundedPrice(price)), amt > 0 ? BitmexSide.BUY : BitmexSide.SELL, null, "ParticipateDoNotInitiate");
+            limitOrder = tradeRaw.placeLimitOrder(instrument, new BigDecimal(amt), new BigDecimal(Formatter.getRoundedPrice(price)), amt > 0 ? BitmexSide.BUY : BitmexSide.SELL, null, "ParticipateDoNotInitiate");
 
         } catch (Exception e) {
 
@@ -139,7 +139,7 @@ public class BitmexRestMethods {
                 if (force && e.getCause().getMessage().contains("503")) {
                     System.out.println("overload error (limit), retrying in 1000ms");
                     Thread.sleep(1000);
-                    limit(amt, price, true);
+                    limit(instrument, amt, price, true);
                 } else if (e.getCause().getMessage().contains("503")) {
                     System.out.println("overload error (limit), not forcing");
                 } else {
@@ -151,20 +151,20 @@ public class BitmexRestMethods {
         return limitOrder;
     }
 
-    public static BitmexPrivateOrder market(double amt, boolean force) throws InterruptedException {
+    public static BitmexPrivateOrder market(String instrument, double amt, boolean force) throws InterruptedException {
 
         BitmexPrivateOrder marketOrder = null;
 
         try {
 
-            marketOrder = tradeRaw.placeMarketOrder("XBTUSD", amt>0?BitmexSide.BUY:BitmexSide.SELL, new BigDecimal(amt), null);
+            marketOrder = tradeRaw.placeMarketOrder(instrument, amt>0?BitmexSide.BUY:BitmexSide.SELL, new BigDecimal(amt), null);
 
         } catch (Exception e) {
 //            e.printStackTrace();
             if (force && e.getMessage().contains("503")) {
                 System.out.println("overload error (market), retrying in 1000ms");
                 Thread.sleep(1000);
-                market(amt, true);
+                market(instrument, amt, true);
             }else if (e.getMessage().contains("503")) {
                 System.out.println("overload error (market), not forcing");
             } else {
@@ -177,49 +177,49 @@ public class BitmexRestMethods {
     }
 
 
-    public static void MLscalp(double amt, double profitPercent) throws InterruptedException {
+//    public static void MLscalp(double amt, double profitPercent) throws InterruptedException {
+//
+//        BitmexPrivateOrder market = market(amt, true);
+//
+//        System.out.println("market order: " + market.toString());
+//
+//        if (market.getId() != null) {
+//
+//            limit(-amt,market.getPrice().doubleValue() * (amt > 0 ? (1 + profitPercent*.01) : (1 - profitPercent*.01) ), true );
+//
+//        }
+//
+//
+//
+//    }
 
-        BitmexPrivateOrder market = market(amt, true);
-
-        System.out.println("market order: " + market.toString());
-
-        if (market.getId() != null) {
-
-            limit(-amt,market.getPrice().doubleValue() * (amt > 0 ? (1 + profitPercent*.01) : (1 - profitPercent*.01) ), true );
-
-        }
-
-
-
-    }
-
-    public static void limitLine(double start, double howMany, double gap, double amt) throws InterruptedException {
-
-        System.out.println("limitline start: " + start + " amt " + amt + " #:" + howMany + " gap:" + gap);
-
-        double price = start;
-
-
-        for (int i = 0; i < howMany; i++) {
-
-            System.out.println("placing limit: " + amt + " price: " + price);
-
-            limit(amt, price, true);
-
-            if (amt > 0) {
-                price -= gap;
-            } else {
-                price += gap;
-            }
-
-            Thread.sleep(3000);
-
-        }
-
-
-
-
-    }
+//    public static void limitLine(double start, double howMany, double gap, double amt) throws InterruptedException {
+//
+//        System.out.println("limitline start: " + start + " amt " + amt + " #:" + howMany + " gap:" + gap);
+//
+//        double price = start;
+//
+//
+//        for (int i = 0; i < howMany; i++) {
+//
+//            System.out.println("placing limit: " + amt + " price: " + price);
+//
+//            limit(amt, price, true);
+//
+//            if (amt > 0) {
+//                price -= gap;
+//            } else {
+//                price += gap;
+//            }
+//
+//            Thread.sleep(3000);
+//
+//        }
+//
+//
+//
+//
+//    }
 
 
     public static double getPosition() throws IOException {

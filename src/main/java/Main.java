@@ -21,8 +21,8 @@ public class Main {
 
         startLaunchWindow();
 
-        coonectBitmexWebsocket();
-        connectBitmexREST();
+//        coonectBitmexWebsocket();
+//        connectBitmexREST();
 
     }
 
@@ -56,7 +56,7 @@ public class Main {
 
             if (launchWindow != null) {
                 launchWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                launchWindow.setSize(600, 400);
+                launchWindow.setSize(800, 600);
                 launchWindow.setLocationRelativeTo(null);
                 launchWindow.setVisible(true);
             }

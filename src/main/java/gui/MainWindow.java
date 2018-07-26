@@ -344,6 +344,13 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                     System.out.println("XBTUSD" + "forcemaker sell " + amtField.getText());
 
+                    try {
+                        ForceMaker forcemaker = new ForceMaker("XBT/USD", -Formatter.getNumber(amtField.getText()));
+                        forcemakers.add(forcemaker);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+
                 } else if (XBTUSDlimitBool) {
                     try {
                         BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);

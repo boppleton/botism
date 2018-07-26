@@ -602,7 +602,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
     @Override
     public void receiveBroadcast(String message) throws InterruptedException, IOException {
 
-        System.out.println("msg received: " + message);
+//        System.out.println("msg received: " + message);
 
         if (message.contains("table\":\"order")) {
 
@@ -643,10 +643,10 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             }
 
             if (status != null && status.contains("Filled")) {
-                for (ForceMaker fm : forcemakers) {
-                    if (fm.getId().contains(id)) {
-                        System.out.println("forcemaker filled, removing. amt-" + fm.getAmount() + " id-" + fm.getId());
-                        forcemakers.remove(fm);
+                for (int i = 0; i < forcemakers.size(); i++) {
+                    if (forcemakers.get(i).getId().contains(id)) {
+                        System.out.println("forcemaker filled, removing. amt-" + forcemakers.get(i).getAmount() + " id-" + forcemakers.get(i).getId());
+                        forcemakers.remove(forcemakers.get(i));
                     }
                 }
             }

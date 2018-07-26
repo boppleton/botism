@@ -1,13 +1,17 @@
 package gui;
 
 import data.Order;
+import data.Position;
 import gui.order.OpenOrdersCell;
 import gui.order.OpenOrdersTableModel;
+import gui.position.PositionsCell;
+import gui.position.PositionsTableModel;
 import org.apache.commons.lang3.StringUtils;
 import rest.BitmexRestMethods;
 import utils.Broadcaster;
 import utils.Formatter;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,15 +20,23 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MainWindow extends JFrame implements Broadcaster.BroadcastListener {
 
     private JScrollPane ordersScrollPane;
     private JTable ordersTable;
 
+    private JScrollPane positionsScrollPane;
+    private JTable positionsTable;
+
+
     /// doin this
     private static ArrayList<Order> XBTUSDorders = new ArrayList<>();
     private static ArrayList<Order> XBTU18orders = new ArrayList<>();
+
+    private static ArrayList<Position> XBTUSDpositions = new ArrayList<>();
+    private static ArrayList<Position> XBTU18positions = new ArrayList<>();
 
     private static GridBagConstraints gbc = new GridBagConstraints();
 
@@ -43,7 +55,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
     private static boolean XBTU18marketBool = false;
 
 
-
     private static JTabbedPane tabs;
 
     public MainWindow(String title) {
@@ -51,27 +62,28 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         setLayout(new GridBagLayout());
         Broadcaster.register(this);
 
+
         XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
-        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7100.5", "678dshj-dgssdjf-sdfg39a-sgf64h"));
-        XBTUSDorders.add(new Order("update", "Buy", 20000, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
+//        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7100.5", "678dshj-dgssdjf-sdfg39a-sgf64h"));
+//        XBTUSDorders.add(new Order("update", "Buy", 20000, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
+//
+//        XBTU18orders.add(new Order("update", "Buy", 500, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
 
-        XBTU18orders.add(new Order("update", "Buy", 500, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
-
+        XBTUSDpositions.add(new Position("insert", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
 
         tabs = new JTabbedPane();
 
         gbc.fill = GridBagConstraints.BOTH;
-        gbc(0,0,1,1, GridBagConstraints.NORTHWEST);
+        gbc(0, 0, 1, 1, GridBagConstraints.NORTHWEST);
         add(tabs, gbc);
         gbc.fill = GridBagConstraints.NONE;
 
-        newInstrumentTab("XBT/USD", new JPanel(new GridBagLayout()), new JTextField(), new JTextField(), new JPanel(false),  XBTUSDforcemakerBool, XBTUSDlimitBool, XBTUSDmarketBool);
+        newInstrumentTab("XBT/USD", new JPanel(new GridBagLayout()), new JTextField(), new JTextField(), new JPanel(false), XBTUSDforcemakerBool, XBTUSDlimitBool, XBTUSDmarketBool);
 
-        newInstrumentTab("XBT/U18", new JPanel(new GridBagLayout()), new JTextField(),  new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
-
-
+        newInstrumentTab("XBT/U18", new JPanel(new GridBagLayout()), new JTextField(), new JTextField(), new JPanel(), XBTU18forcemakerBool, XBTU18limitBool, XBTU18marketBool);
 
 
+//        timerRefresh();
     }
 
     private void newInstrumentTab(String instrument, JPanel panel, JTextField amtField, JTextField priceField, JPanel pricePanel, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
@@ -82,14 +94,15 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
         openOrdersPanel(instrument, panel);
 
-
-
+        positionsPanel(instrument, panel);
 
 
     }
 
 
-    private void setupTradeProfitStopPanels(String instrument, JPanel panel, JTextField amtField, JTextField priceField, JPanel pricePanel,  boolean forcemakerBool, boolean limitBool, boolean marketBool) {
+
+
+    private void setupTradeProfitStopPanels(String instrument, JPanel panel, JTextField amtField, JTextField priceField, JPanel pricePanel, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
 
         JPanel tradeprofitstopPanel = new JPanel(new GridBagLayout());
 
@@ -100,7 +113,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         JRadioButton forcemakerRadio = new JRadioButton("force maker");
         JRadioButton limitCheckbox = new JRadioButton("limit");
         JRadioButton marketCheckbox = new JRadioButton("market");
-
 
 
         gbc(0, 0, 0, 0, GridBagConstraints.NORTHWEST);
@@ -117,7 +129,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
     }
 
-    private void tradePanel(String instrument, JPanel tradeprofitstopPanel, JTextField amtField,  JTextField priceField, JPanel pricePanel,  JButton buy, JButton sell, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
+    private void tradePanel(String instrument, JPanel tradeprofitstopPanel, JTextField amtField, JTextField priceField, JPanel pricePanel, JButton buy, JButton sell, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool) {
 
         //make main trade panel
         JPanel tradePanel = new JPanel(new GridBagLayout());
@@ -188,7 +200,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         }
 
 
-
         //add tradepanel to main panelgroup
         gbc(0, 0, 0, 0, GridBagConstraints.NORTHWEST);
         tradeprofitstopPanel.add(tradePanel, gbc);
@@ -204,18 +215,24 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 if (XBTU18forcemakerBool) {
 
-                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
+                    System.out.println("XBTU18" + "forcemaker buy " + amtField.getText());
 
                 } else if (XBTU18limitBool) {
-//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
                     System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
 
                 } else if (XBTU18marketBool) {
                     System.out.println("market");
-//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.market("XBTU18", (double) Formatter.getNumber(amtField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
                     System.out.println(instrument + "market buy " + amtField.getText());
 
@@ -230,20 +247,26 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 if (XBTU18forcemakerBool) {
 
-                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
+                    System.out.println("XBTU18" + "forcemaker sell " + amtField.getText());
 
                 } else if (XBTU18limitBool) {
-//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
+                    System.out.println("XBTU18" + "limit sell " + amtField.getText() + " @ " + priceField.getText());
 
                 } else if (XBTU18marketBool) {
 //                    System.out.println("market");
-//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.market("XBTU18", (double) Formatter.getNumber(amtField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "market sell " + amtField.getText());
+                    System.out.println("XBTU18" + "market sell " + amtField.getText());
 
                 }
 
@@ -261,20 +284,26 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 if (XBTUSDforcemakerBool) {
 
-                    System.out.println(instrument + "forcemaker buy " + amtField.getText());
+                    System.out.println("XBTUSD" + "forcemaker buy " + amtField.getText());
 
                 } else if (XBTUSDlimitBool) {
-//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "limit buy " + amtField.getText() + " @ " + priceField.getText());
+                    System.out.println("XBTUSD" + "limit buy " + amtField.getText() + " @ " + priceField.getText());
 
                 } else if (XBTUSDmarketBool) {
                     System.out.println("market");
-//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.market("XBTUSD", (double) Formatter.getNumber(amtField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "market buy " + amtField.getText());
+                    System.out.println("XBTUSD" + "market buy " + amtField.getText());
 
                 }
 
@@ -287,20 +316,26 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 if (XBTUSDforcemakerBool) {
 
-                    System.out.println(instrument + "forcemaker sell " + amtField.getText());
+                    System.out.println("XBTUSD" + "forcemaker sell " + amtField.getText());
 
                 } else if (XBTUSDlimitBool) {
-//                    try { BitmexRestMethods.limit(instrument, (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "limit sell " + amtField.getText() + " @ " + priceField.getText());
+                    System.out.println("XBTUSD" + "limit sell " + amtField.getText() + " @ " + priceField.getText());
 
                 } else if (XBTUSDmarketBool) {
 //                    System.out.println("market");
-//                    try { BitmexRestMethods.market(instrument, (double) Formatter.getNumber(amtField.getText()), true);
-//                    } catch (InterruptedException e1) { e1.printStackTrace(); }
+                    try {
+                        BitmexRestMethods.market("XBTUSD", (double) Formatter.getNumber(amtField.getText()), true);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
 
-                    System.out.println(instrument + "market sell " + amtField.getText());
+                    System.out.println("XBTUSD" + "market sell " + amtField.getText());
 
                 }
 
@@ -324,6 +359,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         tradeprofitstopPanel.add(takeprofitPanel, gbc);
 
     }
+
     private void stopsPanel(JPanel tradeprofitstopPanel) {
 
         JPanel stopsPanel = new JPanel(new GridBagLayout());
@@ -379,6 +415,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             }
         });
     }
+
     private void setupXBTU18TradeRadios(String instrument, JButton buy, JButton sell, JTextField amtField, JRadioButton forcemakerRadio, JRadioButton limitCheckbox, JRadioButton marketCheckbox, boolean forcemakerBool, boolean limitBool, boolean marketBool, JTextField priceField, JPanel pricePanel) {
 
 
@@ -448,10 +485,48 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         });
 
 
-        gbc(0,1,1,1,GridBagConstraints.NORTHWEST);
+        gbc(0, 1, 0, 0, GridBagConstraints.NORTHWEST);
         gbc.fill = GridBagConstraints.BOTH;
         panel.add(ordersScrollPane, gbc);
         gbc.fill = GridBagConstraints.NONE;
+
+
+    }
+
+
+    private void positionsPanel(String instrument, JPanel panel) {
+
+
+        if (instrument.contains("XBT/USD")) {
+            positionsTable = new JTable(new PositionsTableModel(XBTUSDpositions));
+        } else if (instrument.contains("XBT/U18")) {
+            positionsTable = new JTable(new PositionsTableModel(XBTU18positions));
+        }
+
+
+        positionsTable.setDefaultRenderer(Position.class, new PositionsCell());
+        positionsTable.setTableHeader(null);
+
+
+        positionsScrollPane = new JScrollPane(positionsTable);
+        positionsScrollPane.setBorder(BorderFactory.createTitledBorder("positions"));
+
+        positionsScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+
+        positionsScrollPane.addMouseWheelListener(e -> {
+            if (positionsScrollPane.getVerticalScrollBar().getValue() == 0) {
+                positionsScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+            } else {
+                positionsScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+            }
+        });
+
+
+        gbc(0, 2, 1, 1, GridBagConstraints.NORTHWEST);
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(positionsScrollPane, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+
 
 
     }
@@ -466,12 +541,6 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         forcemakerRadio.setSelected(true);
 
     }
-
-
-
-
-
-
 
 
     private void gbc(int gridx, int gridy, double weightx, double weighty, int anchor) {
@@ -490,6 +559,8 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
         if (message.contains("table\":\"order")) {
 
+
+            String instrument = StringUtils.substringBetween(message, "\"symbol\":\"", "\",");
             String id = StringUtils.substringBetween(message, "\"orderID\":\"", "\",");
             String action = StringUtils.substringBetween(message, "\"action\":\"", "\",");
             int currentAmt;
@@ -498,6 +569,9 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             } catch (Exception e) {
                 currentAmt = -1;
             }
+
+            final int ammt = currentAmt;
+
             String side = StringUtils.substringBetween(message, "\"side\":\"", "\",");
             String status = StringUtils.substringBetween(message, "\"ordStatus\":\"", "\",");
 
@@ -514,25 +588,47 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
                 }
             }
 
+
             if (!existingOrder && !id.contains("guid")) {
+
                 System.out.println("order not in list, adding");
-                XBTUSDorders.add(new Order(action, side, currentAmt, status, price, id));
+                XBTUSDorders.add(new Order(action, side, ammt, status, price, id));
+
+                timerRefresh();
+
+
             }
 
-            SwingUtilities.invokeLater(() -> {
-
-                revalidate();
-                repaint();
-
-                getContentPane().revalidate();
-                getContentPane().revalidate();
-
-                ordersTable.revalidate();
-                ordersTable.repaint();
-
-            });
-
         }
+    }
 
+    private void timerRefresh() {
+        System.out.println("timer start");
+
+
+        // using javax.swing.Timer
+        Timer timer = new Timer(0, new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        System.out.println("timer now validating");
+
+                        resize(getSize().width == 600 ? 601:600, getSize().height);
+
+
+                    }
+                });
+
+
+            }
+        });
+        timer.setRepeats(false);
+        timer.setDelay(500);
+        timer.start();
     }
 }

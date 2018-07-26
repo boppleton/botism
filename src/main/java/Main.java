@@ -21,8 +21,9 @@ public class Main {
 
         startLaunchWindow();
 
-//        coonectBitmexWebsocket();
-//        connectBitmexREST();
+        coonectBitmexWebsocket();
+        connectBitmexREST();
+
 
     }
 

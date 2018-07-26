@@ -126,6 +126,8 @@ public class BitmexRestMethods {
 
         try {
 
+            System.out.println(instrument + " limit " + amt + " @ " + price );
+
             limitOrder = tradeRaw.placeLimitOrder(instrument, new BigDecimal(amt), new BigDecimal(Formatter.getRoundedPrice(price)), amt > 0 ? BitmexSide.BUY : BitmexSide.SELL, null, "ParticipateDoNotInitiate");
 
         } catch (Exception e) {

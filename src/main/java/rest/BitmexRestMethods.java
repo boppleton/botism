@@ -119,6 +119,18 @@ public class BitmexRestMethods {
 
     }
 
+    public static BitmexPrivateOrder replaceOrder(String instrument, double amt, double price, String uuid) throws InterruptedException {
+
+        System.out.println("trying to replace " + amt + " " + price + " " + uuid);
+
+        BitmexPrivateOrder repacedOrder = tradeRaw.replaceLimitOrder(instrument, new BigDecimal(amt), new BigDecimal(price), uuid, null, null);
+
+        System.out.println(repacedOrder);
+
+        return repacedOrder;
+
+    }
+
     public static BitmexPrivateOrder limit(String instrument, double amt, double price, boolean force) throws InterruptedException {
 
 

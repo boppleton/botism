@@ -111,6 +111,9 @@ public class BitmexClient extends Client {
             if (message.contains("{\"table\":\"position\"")) {
                 onMessageOrder(message);
             }
+            if (message.contains("{\"table\":\"quote\"")) {
+                onMessageOrder(message);
+            }
 
 //        if (message.contains("{\"table\":\"position\"")) {
 //            try {

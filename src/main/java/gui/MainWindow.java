@@ -63,13 +63,14 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         Broadcaster.register(this);
 
 
-        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
+
+//        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
 //        XBTUSDorders.add(new Order("update", "Buy", 10000, "New", "7100.5", "678dshj-dgssdjf-sdfg39a-sgf64h"));
 //        XBTUSDorders.add(new Order("update", "Buy", 20000, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
 //
 //        XBTU18orders.add(new Order("update", "Buy", 500, "New", "7000.5", "ppooyhj-8ecbfnj-859jgfjjj-oyyi"));
 
-        XBTUSDpositions.add(new Position("insert", "Buy", 10000, "New", "7200.5", "dff14hj-8ecbff2-8591039a-348a"));
+//        XBTUSDpositions.add(new Position("XBT/USD","insert", 10000, "New", "7200.5"));
 
         tabs = new JTabbedPane();
 
@@ -119,7 +120,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         panel.add(tradeprofitstopPanel, gbc);
 
         tradePanel(instrument, tradeprofitstopPanel, amtField, priceField, pricePanel, buy, sell, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool);
-        takeProfitPanel(tradeprofitstopPanel);
+        takeProfitPanel(instrument, tradeprofitstopPanel);
         stopsPanel(tradeprofitstopPanel);
 
         setupTradeStuff(forcemakerRadio, pricePanel);
@@ -344,7 +345,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
     }
 
-    private void takeProfitPanel(JPanel tradeprofitstopPanel) {
+    private void takeProfitPanel(String instrument, JPanel tradeprofitstopPanel) {
 
         JPanel takeprofitPanel = new JPanel(new GridBagLayout());
         takeprofitPanel.setBorder(BorderFactory.createTitledBorder("take profits"));
@@ -357,6 +358,8 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         //add to main panel
         gbc(1, 0, 0, 0, GridBagConstraints.NORTHWEST);
         tradeprofitstopPanel.add(takeprofitPanel, gbc);
+
+
 
     }
 
@@ -472,7 +475,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 
         ordersScrollPane = new JScrollPane(ordersTable);
-        ordersScrollPane.setBorder(BorderFactory.createTitledBorder("open orders"));
+        ordersScrollPane.setBorder(BorderFactory.createTitledBorder("orders"));
 
         ordersScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
 
@@ -485,7 +488,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         });
 
 
-        gbc(0, 1, 0, 0, GridBagConstraints.NORTHWEST);
+        gbc(0, 1, .9, .9, GridBagConstraints.NORTHWEST);
         gbc.fill = GridBagConstraints.BOTH;
         panel.add(ordersScrollPane, gbc);
         gbc.fill = GridBagConstraints.NONE;
@@ -509,7 +512,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 
         positionsScrollPane = new JScrollPane(positionsTable);
-        positionsScrollPane.setBorder(BorderFactory.createTitledBorder("positions"));
+        positionsScrollPane.setBorder(BorderFactory.createTitledBorder("position"));
 
         positionsScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
 
@@ -522,7 +525,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         });
 
 
-        gbc(0, 2, 1, 1, GridBagConstraints.NORTHWEST);
+        gbc(0, 2, .1, .1, GridBagConstraints.SOUTHWEST);
         gbc.fill = GridBagConstraints.BOTH;
         panel.add(positionsScrollPane, gbc);
         gbc.fill = GridBagConstraints.NONE;
@@ -555,7 +558,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
     @Override
     public void receiveBroadcast(String message) throws InterruptedException, IOException {
 
-        System.out.println("order msg received: " + message);
+        System.out.println("msg received: " + message);
 
         if (message.contains("table\":\"order")) {
 
@@ -575,7 +578,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             String side = StringUtils.substringBetween(message, "\"side\":\"", "\",");
             String status = StringUtils.substringBetween(message, "\"ordStatus\":\"", "\",");
 
-            String price = StringUtils.substringBetween(message, "\"price\":\"", "\",");
+            String price = StringUtils.substringBetween(message, "\"price\":", ",\"");
 
             boolean existingOrder = false;
             for (Order o : XBTUSDorders) {
@@ -599,6 +602,52 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
             }
 
+        } else if (message.contains("table\":\"position")) {
+
+            String instrument = StringUtils.substringBetween(message, "\"symbol\":\"", "\",");
+            String action = StringUtils.substringBetween(message, "\"action\":\"", "\",");
+            int currentAmt;
+            try {
+                currentAmt = Integer.parseInt(StringUtils.substringBetween(message, "\"currentQty\":", ","));
+            } catch (Exception e) {
+                currentAmt = -1;
+            }
+
+            final int ammt = currentAmt;
+
+            String status = StringUtils.substringBetween(message, "\"ordStatus\":\"", "\",");
+
+            String price = StringUtils.substringBetween(message, "\"avgEntryPrice\":", ",\"");
+
+            boolean existingOrder = false;
+            for (Position p : XBTUSDpositions) {
+                if (p.getInstrument().contains(instrument)) {
+                    System.out.println("position already active, updating");
+                    if (ammt != -1) {
+                        p.setAmount(ammt);
+                    }
+                    if (price != null) {
+                        p.setPrice(price);
+                    }
+                    existingOrder = true;
+                }
+            }
+
+            if (ammt == 0) {
+                XBTUSDpositions.clear();
+                existingOrder = true;
+            }
+
+
+            if (!existingOrder) {
+
+                System.out.println("position not in list, adding " + instrument + " action: " + action + " ammt:" + ammt + " status " + status + " price " + price);
+                XBTUSDpositions.add(new Position(instrument, action, ammt, status, price));
+
+                timerRefresh();
+
+
+            }
         }
     }
 
@@ -628,7 +677,13 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             }
         });
         timer.setRepeats(false);
-        timer.setDelay(500);
+        timer.setInitialDelay(500);
         timer.start();
+    }
+
+    public static void ordersStatusBarSet(String s) {
+
+
+
     }
 }

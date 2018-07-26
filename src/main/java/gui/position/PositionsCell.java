@@ -31,28 +31,19 @@ public class PositionsCell extends AbstractCellEditor implements TableCellRender
         price = new JLabel();
         panel.add(price);
 
-        status = new JLabel();
-        panel.add(status);
 
 
 
-        id = new JLabel();
-        panel.add(id);
 
     }
 
 
     private void updateData(Position position) {
 
-        side.setText("[" + position.getSide());
 
-        size.setText(" " + position.getAmount());
+        size.setText("[" + (position.getAmount()>0?"long ":"short ") + position.getAmount() + "]");
 
-        price.setText(" @ " + position.getPrice() + "]");
-
-        status.setText(" (status: " + position.getStatus());
-
-        id.setText(") (id: " + position.getId().substring(0,3) + ")");
+        price.setText(" entry: " + position.getPrice());
 
 
 //        size.setText(Formatter.kFormat((double) Math.abs(order.getAmt()), 0) + (order.getSide() ? " short liq'd " : " long liq'd "));
@@ -74,7 +65,7 @@ public class PositionsCell extends AbstractCellEditor implements TableCellRender
 //        if (Math.abs(slipInt) >= 1) {
 //
 //            slip.setText(String.valueOf(Math.abs(slipInt)));
-//
+//:sh
 //            if (slipInt > 0) {
 //                slip.setIcon(new ImageIcon(getClass().getResource("/uparrow.png")));
 //            } else {

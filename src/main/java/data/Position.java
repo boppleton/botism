@@ -2,20 +2,26 @@ package data;
 
 public class Position {
 
-    String id;
+    public String getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(String instrument) {
+        this.instrument = instrument;
+    }
+
+    String instrument;
     String action;
-    String side;
     int amount;
     String status;
     String price;
 
-    public Position(String action, String side, int amount, String status, String price, String id) {
+    public Position(String instrument, String action, int amount, String status, String price) {
+        this.instrument = instrument;
         this.action = action;
-        this.side = side;
         this.amount = amount;
         this.status = status;
         this.price = price;
-        this.id = id;
     }
 
     public String getAction() {
@@ -24,14 +30,6 @@ public class Position {
 
     public void setAction(String action) {
         this.action = action;
-    }
-
-    public String getSide() {
-        return side;
-    }
-
-    public void setSide(String side) {
-        this.side = side;
     }
 
     public int getAmount() {
@@ -58,12 +56,5 @@ public class Position {
         this.price = price;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
 }

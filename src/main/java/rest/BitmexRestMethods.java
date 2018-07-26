@@ -136,16 +136,21 @@ public class BitmexRestMethods {
 
             if (e.getCause() != null) {
 
-                System.out.println(e.getCause().getMessage());
-                System.out.println("stacktrace obj: " + e.getCause().getMessage());
-                if (force && e.getCause().getMessage().contains("503")) {
-                    System.out.println("overload error (limit), retrying in 1000ms");
-                    Thread.sleep(1000);
-                    limit(instrument, amt, price, true);
-                } else if (e.getCause().getMessage().contains("503")) {
-                    System.out.println("overload error (limit), not forcing");
+                if (e.getCause().getMessage().contains("400")) {
+                    System.out.println("400 error, stopping");
                 } else {
-                    e.printStackTrace();
+
+                    System.out.println(e.getCause().getMessage());
+                    System.out.println("stacktrace obj: " + e.getCause().getMessage());
+                    if (force && e.getCause().getMessage().contains("503")) {
+                        System.out.println("overload error (limit), retrying in 1000ms");
+                        Thread.sleep(1000);
+                        limit(instrument, amt, price, true);
+                    } else if (e.getCause().getMessage().contains("503")) {
+                        System.out.println("overload error (limit), not forcing");
+                    } else {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -162,7 +167,7 @@ public class BitmexRestMethods {
             marketOrder = tradeRaw.placeMarketOrder(instrument, amt>0?BitmexSide.BUY:BitmexSide.SELL, new BigDecimal(amt), null);
 
         } catch (Exception e) {
-//            e.printStackTrace();
+            e.printStackTrace();
             if (force && e.getMessage().contains("503")) {
                 System.out.println("overload error (market), retrying in 1000ms");
                 Thread.sleep(1000);

@@ -21,8 +21,8 @@ public class Main {
 
         startLaunchWindow();
 
-        coonectBitmexWebsocket();
-        connectBitmexREST();
+//        coonectBitmexWebsocket();
+//        connectBitmexREST();
 
 
     }
@@ -40,9 +40,11 @@ public class Main {
 
         bitmexClient.authSubscribe(BitmexSetup.getKey(), HMAC.hmacDigest("GET/realtime" + 1630475936, BitmexSetup.getSec(), "HmacSHA256"));
 
-//        bitmexClient.send("{\"op\": \"subscribe\", \"args\": [\"position\"]}");
+        bitmexClient.send("{\"op\": \"subscribe\", \"args\": [\"position\"]}");
 //        bitmexClient.subscribe(true, "quote", "XBTUSD");
         bitmexClient.subscribe(true, "order", "XBTUSD");
+//        bitmexClient.subscribe(true, "position", "XBTUSD");
+
     }
     private static void startLaunchWindow() { //launch the starting JFrame with l & f set
 

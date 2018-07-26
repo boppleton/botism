@@ -103,9 +103,14 @@ public class BitmexClient extends Client {
 
 //        System.out.println(message);
 
-        if (message.contains("{\"table\":\"order\"")) {
-            onMessageOrder(message);
-        }
+        if (!message.contains("keys")) {
+
+            if (message.contains("{\"table\":\"order\"")) {
+                onMessageOrder(message);
+            }
+            if (message.contains("{\"table\":\"position\"")) {
+                onMessageOrder(message);
+            }
 
 //        if (message.contains("{\"table\":\"position\"")) {
 //            try {
@@ -137,7 +142,7 @@ public class BitmexClient extends Client {
 ////        } else {
 ////            onMessageOther(message);
 //        }
-
+        }
     }
 
     private void onMessageOrder(String message) {

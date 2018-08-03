@@ -9,6 +9,7 @@ import gui.position.PositionsCell;
 import gui.position.PositionsTableModel;
 import macro.ForceMaker;
 import org.apache.commons.lang3.StringUtils;
+import org.knowm.xchange.bitmex.dto.marketdata.BitmexPrivateOrder;
 import rest.BitmexRestMethods;
 import utils.Broadcaster;
 import utils.Formatter;
@@ -133,12 +134,12 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         JRadioButton marketCheckbox = new JRadioButton("market");
 
 
-        gbc(0, 0, 1, 0, GridBagConstraints.NORTHWEST);
+        gbc(0, 0, .1, 0, GridBagConstraints.NORTHWEST);
         panel.add(tradeprofitstopPanel, gbc);
 
         tradePanel(instrument, tradeprofitstopPanel, amtField, priceField, pricePanel, buy, sell, forcemakerRadio, limitCheckbox, marketCheckbox, forcemakerBool, limitBool, marketBool);
         takeProfitPanel(instrument, tradeprofitstopPanel);
-//        stopsPanel(tradeprofitstopPanel);
+        stopsPanel(instrument, tradeprofitstopPanel);
 
         setupTradeStuff(forcemakerRadio, pricePanel);
 
@@ -379,6 +380,15 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
     private void takeProfitPanel(String instrument, JPanel tradeprofitstopPanel) {
 
+
+
+
+
+
+
+
+
+
         JPanel takeprofitPanel = new JPanel(new GridBagLayout());
         takeprofitPanel.setBorder(BorderFactory.createTitledBorder("take profits"));
 
@@ -388,7 +398,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
         JLabel profLabel = new JLabel("close ");
         gbc(0, 0, .1, .1, GridBagConstraints.WEST);
-        takeprofitPanel.add(profLabel, gbc);
+//        takeprofitPanel.add(profLabel, gbc);
 
         gbc(1, 0, .1, .1, GridBagConstraints.EAST);
 //        JCheckBox takeprofit1 = new JCheckBox("take profit 1");
@@ -397,7 +407,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         profitAmountPercent.setText("10");
 
 
-        takeprofitPanel.add(profitAmountPercent, gbc);
+//        takeprofitPanel.add(profitAmountPercent, gbc);
 
         JLabel percentAtLabel = new JLabel("% at");
         gbc(2, 0, .1, .1, GridBagConstraints.WEST);
@@ -408,24 +418,32 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
         takeprofitPanel.add(profitPercent, gbc);
 
         //add to main panel
-        gbc(1, 0, 1, 0, GridBagConstraints.NORTHEAST);
-        tradeprofitstopPanel.add(takeprofitPanel, gbc);
+        gbc(1, 0, 0, 0, GridBagConstraints.NORTHEAST);
+//        tradeprofitstopPanel.add(takeprofitPanel, gbc);
 
 
     }
 
-    private void stopsPanel(JPanel tradeprofitstopPanel) {
+    private void stopsPanel(String instrument, JPanel tradeprofitstopPanel) {
 
         JPanel stopsPanel = new JPanel(new GridBagLayout());
-        stopsPanel.setBorder(BorderFactory.createTitledBorder("stops"));
+        stopsPanel.setBorder(BorderFactory.createTitledBorder("take profit"));
 
         gbc(0, 0, 0, 0, GridBagConstraints.WEST);
-        JCheckBox stop1 = new JCheckBox("stop 1");
+        JComboBox<String> amountPercent = new JComboBox<>();
+        amountPercent.addItem("10%");
+        amountPercent.addItem("50%");
+        amountPercent.addItem("100%");
 
-        stopsPanel.add(stop1, gbc);
+        stopsPanel.add(amountPercent, gbc);
+
+        JTextField field1 = new JTextField(7);
+
+        gbc(1,0,0,0,GridBagConstraints.NORTHWEST);
+        stopsPanel.add(field1, gbc);
 
         //add to main panel
-        gbc(2, 0, .1, 0, GridBagConstraints.NORTHEAST);
+        gbc(1, 0, 1, 0, GridBagConstraints.NORTHEAST);
         tradeprofitstopPanel.add(stopsPanel, gbc);
 
     }
@@ -606,10 +624,24 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
     }
 
 
+    private static int currentPosition = 0;
+
+    private static boolean freshStart = true;
+
+    private static double staticEntry = 0;
+
+
+    private static double currentBid = 0;
+    private static double currentAsk = 0;
+
+
+    private static ArrayList<BitmexPrivateOrder> openOrders = new ArrayList<>();
+
+
     @Override
     public void receiveBroadcast(String message) throws InterruptedException, IOException {
 
-//        System.out.println("msg received: " + message);
+        System.out.println("msg received: " + message);
 
         if (message.contains("table\":\"order")) {
 
@@ -631,6 +663,8 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
             String price = StringUtils.substringBetween(message, "\"price\":", ",\"");
 
+            String text = StringUtils.substringBetween(message, "\"text\":\"", "\",");
+
             boolean existingOrder = false;
             for (Order o : XBTUSDorders) {
                 if (o.getId().contains(id)) {
@@ -646,7 +680,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             if (!existingOrder && !id.contains("guid")) {
 
                 System.out.println("order not in list, adding");
-                XBTUSDorders.add(new Order(action, side, ammt, status, price, id));
+                XBTUSDorders.add(new Order("ordertag", action, side, ammt, status, price, id));
             }
 
             if (status != null && status.contains("Filled")) {
@@ -658,11 +692,54 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
                 }
             }
 
+            if (status != null && status.contains("Canceled")) {
+
+                if (text.contains("Canceled: Order had execInst of ParticipateDoNotInitiate")) {
+
+                    for (int i = 0; i < forcemakers.size(); i++) {
+                        if (forcemakers.get(i).getId().contains(id)) {
+                            System.out.println("forcemaker canceled, retrying with updated price. amt-" + forcemakers.get(i).getAmount() + " id-" + forcemakers.get(i).getId());
+
+                            double updatedBid = 0;
+                            double updatedAsk = 0;
+
+
+                            System.out.println(instrument);
+
+                            if (instrument.contains("XBT/USD")) {
+                                updatedBid = quotes.get(0).getBid();
+                                updatedAsk = quotes.get(0).getAsk();
+                            }
+
+
+                            System.out.println("updating with " + side.contains("Buy")+ updatedBid+ updatedAsk);
+                            forcemakers.get(i).updateForcelimit(side.contains("Buy"), updatedBid, updatedAsk);
+                        }
+                    }
+
+                } else {
+                    for (int i = 0; i < forcemakers.size(); i++) {
+                        if (forcemakers.get(i).getId().contains(id)) {
+                            forcemakers.remove(forcemakers.get(i));
+                        }
+                    }
+
+
+
+                }
+            }
+
+
 
         } else if (message.contains("table\":\"position")) {
 
             String instrument = StringUtils.substringBetween(message, "\"symbol\":\"", "\",");
             String action = StringUtils.substringBetween(message, "\"action\":\"", "\",");
+
+
+            double entryPrice; try { entryPrice = Double.parseDouble(StringUtils.substringBetween(message, "\"avgEntryPrice\":", ",")); }catch (Exception e) { entryPrice = -1; }
+
+
             int currentAmt;
             try {
                 currentAmt = Integer.parseInt(StringUtils.substringBetween(message, "\"currentQty\":", ","));
@@ -675,6 +752,67 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
             String status = StringUtils.substringBetween(message, "\"ordStatus\":\"", "\",");
 
             String price = StringUtils.substringBetween(message, "\"avgEntryPrice\":", ",\"");
+
+//            int currentPosition;
+//
+//            if (XBTUSDpositions.get(0) != null) {
+//                currentPosition = XBTUSDpositions.get(0).getAmount();
+//            }  else {
+//                currentPosition = 0;
+//            }
+//
+//            if (entryPrice > 0) {
+//                staticEntry = entryPrice;
+//            }
+
+
+            System.out.println("posit msg: " + action + " " + instrument + " - " + (currentAmt == -1? null : currentAmt));
+
+
+            if (currentAmt != -1 && currentAmt != 0 && (currentAmt>= 0?(currentAmt > currentPosition):(currentAmt < currentPosition)) ) {
+                System.out.println("update close (position changed)");
+
+                currentPosition = currentAmt;
+
+//                MainWindow.active = false;
+
+                System.out.println("freshsrt: " + freshStart);
+                if (!freshStart) {
+                    System.out.println("next is closeorder ");
+
+                    entryPrice = BitmexRestMethods.getPositionEntry();
+
+                    BitmexPrivateOrder closeOrder = BitmexRestMethods.updateClose("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .09, true);
+
+//                    BitmexPrivateOrder stop = BitmexRestMethods.updateStop("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .2, true);
+
+
+                    System.out.println("closeorder: " + closeOrder.getId());
+
+                    if (openOrders.size() > 0) {
+                        for (int i = 0; i < openOrders.size(); i++) {
+                            BitmexRestMethods.cancelOrder(openOrders.get(i).getId());
+                        }
+                        openOrders.clear();
+                    }
+
+                    openOrders.add(closeOrder);
+
+                    currentPosition = currentAmt;
+
+                } else {
+                    freshStart = false;
+                    System.out.println("starting position: " + currentPosition);
+                }
+
+
+            } else if (currentAmt == 0) {
+                System.out.println("position 0, reset limits");
+
+
+
+            }
+
 
             boolean existingOrder = false;
             for (Position p : XBTUSDpositions) {

@@ -10,14 +10,24 @@ public class Order {
     int amount;
     String status;
     String price;
+    String orderTag;
 
-    public Order(String action, String side, int amount, String status, String price, String id) {
+    public Order(String orderTag, String action, String side, int amount, String status, String price, String id) {
+        this.orderTag = orderTag;
         this.action = action;
         this.side = side;
         this.amount = amount;
         this.status = status;
         this.price = price;
         this.id = id;
+    }
+
+    public String getOrderTag() {
+        return orderTag;
+    }
+
+    public void setOrderTag(String orderTag) {
+        this.orderTag = orderTag;
     }
 
     public String getAction() {

@@ -47,6 +47,19 @@ public class BitmexRestMethods {
 
     }
 
+    public static BitmexPrivateOrder updateStop(String instrument, int positionsize, double entry, double profitPercent, boolean force) throws InterruptedException {
+
+        double stopPrice = positionsize < 0 ? (entry * (1+profitPercent*.01)) : (entry * (1-profitPercent*.01));
+
+        System.out.println("setting stop for position:" + positionsize + " entry:" + entry + "closeprice:" + stopPrice);
+
+        BitmexPrivateOrder order = stop(instrument, -positionsize, positionsize > 0 ? Math.ceil(stopPrice) : Math.floor(stopPrice), force);
+
+
+        return order;
+
+    }
+
     public static Order getOrder(String uuid) throws IOException, InterruptedException {
 
         Order order = null;
@@ -195,6 +208,44 @@ public class BitmexRestMethods {
 
     }
 
+    public static BitmexPrivateOrder replaceStop(String instrument, double amt, double price, String uuid) throws InterruptedException {
+
+        System.out.println("trying to replace " + amt + " " + price + " " + uuid);
+
+        BitmexPrivateOrder repacedOrder = tradeRaw.replaceStopOrder(new BigDecimal(amt), new BigDecimal(price), uuid, null, null);
+
+        System.out.println(repacedOrder);
+
+        return repacedOrder;
+
+    }
+
+
+    public static BitmexPrivateOrder stop(String instrument, double amt, double price, boolean force) throws InterruptedException {
+
+        BitmexPrivateOrder stop = null;
+
+        try {
+
+            stop = tradeRaw.placeStopOrder(instrument, amt>0?BitmexSide.BUY:BitmexSide.SELL, new BigDecimal(amt), new BigDecimal(price), null, null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (force && e.getMessage().contains("503")) {
+                System.out.println("overload error (market), retrying in 1000ms");
+                Thread.sleep(1000);
+                stop(instrument, amt, price, true);
+            }else if (e.getMessage().contains("503")) {
+                System.out.println("overload error (market), not forcing");
+            } else {
+                e.printStackTrace();
+            }
+        }
+
+        return stop;
+
+    }
+
 
 //    public static void MLscalp(double amt, double profitPercent) throws InterruptedException {
 //
@@ -212,33 +263,33 @@ public class BitmexRestMethods {
 //
 //    }
 
-//    public static void limitLine(double start, double howMany, double gap, double amt) throws InterruptedException {
-//
-//        System.out.println("limitline start: " + start + " amt " + amt + " #:" + howMany + " gap:" + gap);
-//
-//        double price = start;
-//
-//
-//        for (int i = 0; i < howMany; i++) {
-//
-//            System.out.println("placing limit: " + amt + " price: " + price);
-//
-//            limit(amt, price, true);
-//
-//            if (amt > 0) {
-//                price -= gap;
-//            } else {
-//                price += gap;
-//            }
-//
-//            Thread.sleep(3000);
-//
-//        }
-//
-//
-//
-//
-//    }
+    public static void limitLine(double start, double howMany, double gap, double amt) throws InterruptedException {
+
+        System.out.println("limitline start: " + start + " amt " + amt + " #:" + howMany + " gap:" + gap);
+
+        double price = start;
+
+
+        for (int i = 0; i < howMany; i++) {
+
+            System.out.println("placing limit: " + amt + " price: " + price);
+
+            limit("XBTUSD", amt, price, true);
+
+            if (amt > 0) {
+                price -= gap;
+            } else {
+                price += gap;
+            }
+
+            Thread.sleep(3000);
+
+        }
+
+
+
+
+    }
 
 
     public static double getPosition() throws IOException {
@@ -271,6 +322,44 @@ public class BitmexRestMethods {
 
 
         return posSize;
+
+
+    }
+
+    public static double getPositionEntry() throws IOException {
+
+        double entry = -1;
+
+        try {
+
+            List<BitmexPosition> positions = tradeRaw.getBitmexPositions("XBTUSD");
+
+            System.out.println("getting position");
+
+            Thread.sleep(500);
+
+            for (BitmexPosition pos : positions) {
+
+                if (pos.getSymbol().contains("XBTUSD")) {
+
+                    System.out.println(pos);
+
+                    entry = pos.getAvgEntryPrice().doubleValue();
+
+
+                    System.out.println(entry);
+                }
+            }
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+        return entry;
 
 
     }

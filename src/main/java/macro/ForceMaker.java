@@ -26,8 +26,20 @@ public class ForceMaker {
 
     private Timer timer;
 
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
+
+    private boolean alive = false;
+
 
     public ForceMaker(String instrument, int amount) throws InterruptedException {
+
+        alive = true;
 
         timestamp = System.currentTimeMillis();
 
@@ -71,9 +83,15 @@ public class ForceMaker {
 
         BitmexPrivateOrder replaceOrder = null;
 
-        replaceOrder = BitmexRestMethods.replaceOrder(instrument.replace("/", ""), amount, price, id);
+        try {
+            replaceOrder = BitmexRestMethods.replaceOrder(instrument.replace("/", ""), amount, price, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error replacing order, turning alive to false");
+            alive = false;
+        }
 
-        System.out.println("replaced order ok, id " + replaceOrder.getId());
+        System.out.println("replaced order, id " + replaceOrder.getId());
 
         return replaceOrder.getId();
 
@@ -93,7 +111,7 @@ public class ForceMaker {
                 bid = q.getBid();
                 ask = q.getAsk();
 
-                order = BitmexRestMethods.limit(instrument.replace("/", ""), amount, amount>0?q.getBid():q.getAsk(), false);
+                order = BitmexRestMethods.limit(instrument.replace("/", ""), amount, amount>0?q.getBid():q.getAsk(), false, false);
             }
         }
 

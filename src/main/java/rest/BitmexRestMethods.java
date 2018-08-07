@@ -2,6 +2,7 @@ package rest;
 
 import gui.MainWindow;
 import org.knowm.xchange.Exchange;
+import org.knowm.xchange.bitmex.Bitmex;
 import org.knowm.xchange.bitmex.dto.marketdata.BitmexPrivateOrder;
 import org.knowm.xchange.bitmex.dto.trade.BitmexPosition;
 import org.knowm.xchange.bitmex.dto.trade.BitmexSide;
@@ -40,8 +41,13 @@ public class BitmexRestMethods {
 
         System.out.println("setting close for position:" + positionsize + " entry:" + entry + "closeprice:" + closePrice);
 
-        BitmexPrivateOrder order = limit(instrument, -positionsize, positionsize > 0 ? Math.ceil(closePrice) : Math.floor(closePrice), force);
+        BitmexPrivateOrder order = limit(instrument, -positionsize, positionsize > 0 ? Math.ceil(closePrice) : Math.floor(closePrice), force, true);
 
+        if (order.getOrderStatus().toString().contains("Canceled")) {
+            System.out.println("closeorder canceled, re-doing.  newbid:" + MainWindow.getQuotes().get(0).getBid() + " newask: " + MainWindow.getQuotes().get(0).getAsk());
+
+            updateClose(instrument, positionsize, positionsize>0?MainWindow.getQuotes().get(0).getBid():MainWindow.getQuotes().get(0).getAsk(), profitPercent, true);
+        }
 
         return order;
 
@@ -50,6 +56,7 @@ public class BitmexRestMethods {
     public static BitmexPrivateOrder updateStop(String instrument, int positionsize, double entry, double profitPercent, boolean force) throws InterruptedException {
 
         double stopPrice = positionsize < 0 ? (entry * (1+profitPercent*.01)) : (entry * (1-profitPercent*.01));
+
 
         System.out.println("setting stop for position:" + positionsize + " entry:" + entry + "closeprice:" + stopPrice);
 
@@ -144,7 +151,7 @@ public class BitmexRestMethods {
 
     }
 
-    public static BitmexPrivateOrder limit(String instrument, double amt, double price, boolean force) throws InterruptedException {
+    public static BitmexPrivateOrder limit(String instrument, double amt, double price, boolean force, boolean reduceOnly) throws InterruptedException {
 
 
         BitmexPrivateOrder limitOrder = null;
@@ -153,7 +160,7 @@ public class BitmexRestMethods {
 
             System.out.println(instrument + " limit " + amt + " @ " + price );
 
-            limitOrder = tradeRaw.placeLimitOrder(instrument, new BigDecimal(amt), new BigDecimal(Formatter.getRoundedPrice(price)), amt > 0 ? BitmexSide.BUY : BitmexSide.SELL, null, "ParticipateDoNotInitiate");
+            limitOrder = tradeRaw.placeLimitOrder(instrument, new BigDecimal(amt), new BigDecimal(Formatter.getRoundedPrice(price)), amt > 0 ? BitmexSide.BUY : BitmexSide.SELL, null, "ParticipateDoNotInitiate" + (reduceOnly?", ReduceOnly":""));
 
         } catch (Exception e) {
 
@@ -170,7 +177,7 @@ public class BitmexRestMethods {
                     if (force && e.getCause().getMessage().contains("503")) {
                         System.out.println("overload error (limit), retrying in 1000ms");
                         Thread.sleep(1000);
-                        limit(instrument, amt, price, true);
+                        limit(instrument, amt, price, true, reduceOnly);
                     } else if (e.getCause().getMessage().contains("503")) {
                         System.out.println("overload error (limit), not forcing");
                     } else {
@@ -274,7 +281,7 @@ public class BitmexRestMethods {
 
             System.out.println("placing limit: " + amt + " price: " + price);
 
-            limit("XBTUSD", amt, price, true);
+            limit("XBTUSD", amt, price, true, false);
 
             if (amt > 0) {
                 price -= gap;
@@ -377,6 +384,9 @@ public class BitmexRestMethods {
 //
         serviceRaw = (BitmexMarketDataServiceRaw) service;
         tradeRaw = (BitmexTradeServiceRaw) tradeService;
+
+
+
 
     }
 

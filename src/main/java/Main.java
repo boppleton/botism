@@ -38,7 +38,7 @@ public class Main {
         bitmexClient = new BitmexClient();
         bitmexClient.connectBlocking();
 
-        bitmexClient.authSubscribe(BitmexSetup.getKey(), HMAC.hmacDigest("GET/realtime" + 1630475936, BitmexSetup.getSec(), "HmacSHA256"));
+        bitmexClient.authSubscribe(BitmexSetup.getKey(), HMAC.hmacDigest("GET/realtime" + 1630475936, BitmexSetup.getSecret(), "HmacSHA256"));
 
         bitmexClient.send("{\"op\": \"subscribe\", \"args\": [\"position\"]}");
         bitmexClient.subscribe(true, "quote", "XBTUSD");

@@ -238,7 +238,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 } else if (XBTU18limitBool) {
                     try {
-                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true, false);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -270,7 +270,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 } else if (XBTU18limitBool) {
                     try {
-                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                        BitmexRestMethods.limit("XBTU18", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true, false);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -315,7 +315,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 } else if (XBTUSDlimitBool) {
                     try {
-                        BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                        BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true, false);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -354,7 +354,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
                 } else if (XBTUSDlimitBool) {
                     try {
-                        BitmexRestMethods.limit("XBTUSD", (double) Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true);
+                        BitmexRestMethods.limit("XBTUSD", (double) -Formatter.getNumber(amtField.getText()), Double.parseDouble(priceField.getText()), true, false);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -364,7 +364,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
                 } else if (XBTUSDmarketBool) {
 //                    System.out.println("market");
                     try {
-                        BitmexRestMethods.market("XBTUSD", (double) Formatter.getNumber(amtField.getText()), true);
+                        BitmexRestMethods.market("XBTUSD", (double) -Formatter.getNumber(amtField.getText()), true);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
@@ -636,6 +636,8 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 
     private static ArrayList<BitmexPrivateOrder> openOrders = new ArrayList<>();
+    private static ArrayList<BitmexPrivateOrder> openStops = new ArrayList<>();
+
 
 
     @Override
@@ -766,7 +768,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 //            }
 
 
-            System.out.println("posit msg: " + action + " " + instrument + " - " + (currentAmt == -1? null : currentAmt));
+            System.out.println("posit msg: " + action + " " + instrument + " - " + (currentAmt == -1? null : currentAmt) + "currentPosition:" + currentPosition);
 
 
             if (currentAmt != -1 && currentAmt != 0 && (currentAmt>= 0?(currentAmt > currentPosition):(currentAmt < currentPosition)) ) {
@@ -776,40 +778,44 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 //                MainWindow.active = false;
 
-                System.out.println("freshsrt: " + freshStart);
-                if (!freshStart) {
-                    System.out.println("next is closeorder ");
 
-                    entryPrice = BitmexRestMethods.getPositionEntry();
+                System.out.println("next is closeorder ");
 
-                    BitmexPrivateOrder closeOrder = BitmexRestMethods.updateClose("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .09, true);
+                entryPrice = BitmexRestMethods.getPositionEntry();
+
+                BitmexPrivateOrder closeOrder = BitmexRestMethods.updateClose("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .02, true);
 
 //                    BitmexPrivateOrder stop = BitmexRestMethods.updateStop("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .2, true);
 
 
-                    System.out.println("closeorder: " + closeOrder.getId());
+                System.out.println("closeorder: " + closeOrder.getId());
 
-                    if (openOrders.size() > 0) {
-                        for (int i = 0; i < openOrders.size(); i++) {
-                            BitmexRestMethods.cancelOrder(openOrders.get(i).getId());
-                        }
-                        openOrders.clear();
+                if (openOrders.size() > 0) {
+                    for (int i = 0; i < openOrders.size(); i++) {
+                        BitmexRestMethods.cancelOrder(openOrders.get(i).getId());
                     }
-
-                    openOrders.add(closeOrder);
-
-                    currentPosition = currentAmt;
-
-                } else {
-                    freshStart = false;
-                    System.out.println("starting position: " + currentPosition);
+                    openOrders.clear();
                 }
 
+                openOrders.add(closeOrder);
 
-            } else if (currentAmt == 0) {
-                System.out.println("position 0, reset limits");
+//                BitmexPrivateOrder stopOrder = BitmexRestMethods.updateStop("XBTUSD", currentPosition, entryPrice > 0 ? entryPrice : staticEntry, .01, true);
+//
+//
+//                System.out.println("stoporder: " + stopOrder.getId());
+//
+//                if (openStops.size() > 0) {
+//                    for (int i = 0; i < openStops.size(); i++) {
+//                        BitmexRestMethods.cancelOrder(openStops.get(i).getId());
+//                    }
+//                    openStops.clear();
+//                }
+//
+//                openStops.add(stopOrder);
 
 
+
+                currentPosition = currentAmt;
 
             }
 
@@ -878,7 +884,11 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
         for (ForceMaker fm : forcemakers) {
 
-            fm.updateForcelimit((fm.getAmount() > 0), bid, ask);
+            if (fm.isAlive()) {
+                fm.updateForcelimit((fm.getAmount() > 0), bid, ask);
+            } else {
+                forcemakers.remove(fm);
+            }
         }
 
     }
@@ -899,7 +909,7 @@ public class MainWindow extends JFrame implements Broadcaster.BroadcastListener 
 
 //                        System.out.println("timer now validating");
 
-                        resize(getSize().width == 600 ? 601:600, getSize().height);
+                        resize(getSize().width == 400 ? 401:400, getSize().height);
 
 
                     }
